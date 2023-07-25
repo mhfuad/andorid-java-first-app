@@ -16,70 +16,67 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import okhttp3.Call;
-import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import okhttp3.Response;
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 public class MainActivity extends AppCompatActivity {
-    private static final String API_URL = "https://64a40253c3b509573b56ea44.mockapi.io/users";
-    private RecyclerView recyclerView;
-    private TableAdapter adapter;
-    private List<TableRowModel> tableData;
-
+    private static final String API_URL = "https://64a40253c3b509573b56ea44.mockapi.io";
+    private TextView textViewResult;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        textViewResult = findViewById(R.id.text_view_result);
 
-        recyclerView = findViewById(R.id.recyclerView);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-
-        OkHttpClient client = new OkHttpClient();
-        Request request = new Request.Builder()
-                .url(API_URL)
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(API_URL)
+                .addConverterFactory(GsonConverterFactory.create())
                 .build();
-            client.newCall(request).enqueue(new Callback() {
-                public void onFailure(Call call, IOException e) {
-                    e.printStackTrace();
-                    // Handle failure
+
+        MockApi mockApi = retrofit.create(MockApi.class);
+        Call<List<Post>> call = mockApi.getPosts();
+        call.enqueue(new Callback<List<Post>>() {
+            @Override
+            public void onResponse(Call<List<Post>> call, Response<List<Post>> response) {
+                if(!response.isSuccessful()){
+                    textViewResult.setText("code: "+ response.code());
+                    return;
                 }
 
-                public void onResponse(Call call, Response response) throws IOException {
-                    if (response.isSuccessful()) {
-                        String responseData = response.body().string();
-                        List<TableRowModel> data = parseResponseData(responseData);
-                        System.out.println(data);
-                        // Process and display the data
-                        runOnUiThread(() -> showDataInTable(data));
-                    } else {
-                        // Handle error
-                    }
+                List<Post> posts = response.body();
+                for(Post post: posts){
+                    String content = "";
+                    content += "Id: "+ post.getId() + "\n";
+                    content += "User ID: "+ post.getUserId() + "\n";
+                    content += "Title: "+ post.getTitle() + "\n";
+                    content += "Text: "+ post.getText() + "\n";
+                    textViewResult.append(content);
                 }
-            });
-        }
-        //tableData = new ArrayList<>();
-        //adapter = new TableAdapter(tableData);
-        //recyclerView.setAdapter(adapter);
 
-        //new ApiCallTask().execute(API_URL);
-        private List<TableRowModel> parseResponseData(String responseData) {
-            Gson gson = new Gson();
-            TableRowModel[] dataModels = gson.fromJson(responseData, TableRowModel[].class);
-            return Arrays.asList(dataModels);
-        }
+            }
 
-        private void showDataInTable(List<TableRowModel> data) {
-            adapter = new TableAdapter(data);
-            recyclerView.setAdapter(adapter);
-        }
+            @Override
+            public void onFailure(Call<List<Post>> call, Throwable t) {
+                textViewResult.setText(t.getMessage());
+            }
+        });
+    }
 }
