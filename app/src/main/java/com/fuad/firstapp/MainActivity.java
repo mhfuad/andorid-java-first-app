@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -37,45 +38,44 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 public class MainActivity extends AppCompatActivity {
-    private static final String API_URL = "https://64a40253c3b509573b56ea44.mockapi.io";
-    private TextView textViewResult;
+    public static final String API_URL = "https://64a40253c3b509573b56ea44.mockapi.io";
+    //TextView textViewResult;
+    RecyclerView rcvMain;
+    List<Post> posts;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        textViewResult = findViewById(R.id.text_view_result);
 
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(API_URL)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
+        //textViewResult = findViewById(R.id.text_view_result);
+        rcvMain = findViewById(R.id.rcvMain);
+        rcvMain.setLayoutManager(new LinearLayoutManager(this));
 
-        MockApi mockApi = retrofit.create(MockApi.class);
-        Call<List<Post>> call = mockApi.getPosts();
-        call.enqueue(new Callback<List<Post>>() {
+        RetrofitInstance.getInstance().mockApi.getPosts().enqueue(new Callback<List<Post>>() {
             @Override
             public void onResponse(Call<List<Post>> call, Response<List<Post>> response) {
                 if(!response.isSuccessful()){
-                    textViewResult.setText("code: "+ response.code());
+                    //textViewResult.setText("code: "+ response.code());
                     return;
                 }
 
-                List<Post> posts = response.body();
+                posts = response.body();
+                rcvMain.setAdapter(new PostAdapter(MainActivity.this,posts));
                 for(Post post: posts){
                     String content = "";
                     content += "Id: "+ post.getId() + "\n";
                     content += "User ID: "+ post.getUserId() + "\n";
                     content += "Title: "+ post.getTitle() + "\n";
                     content += "Text: "+ post.getText() + "\n";
-                    textViewResult.append(content);
+                    //textViewResult.append(content);
                 }
 
             }
 
             @Override
             public void onFailure(Call<List<Post>> call, Throwable t) {
-                textViewResult.setText(t.getMessage());
+                //textViewResult.setText("prob "+t.getMessage());
             }
         });
     }
