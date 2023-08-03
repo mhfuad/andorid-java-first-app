@@ -13,4 +13,7 @@ public interface MockApi {
 
     @POST("/post")
     Call<Post> savePost(@Body PostRequest postRequest);
+
+    @GET("/users")
+    Call<List<User>> getAllUsers();
 }

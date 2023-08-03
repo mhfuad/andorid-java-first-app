@@ -18,7 +18,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 public class MainActivity extends AppCompatActivity {
     public static final String API_URL = "https://64a40253c3b509573b56ea44.mockapi.io";
     RecyclerView rcvMain;
-    FloatingActionButton fab;
+    FloatingActionButton fab, user;
     List<Post> posts;
 
     @Override
@@ -28,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
 
         rcvMain = findViewById(R.id.rcvMain);
         fab = findViewById(R.id.fab);
+        user = findViewById(R.id.user);
         rcvMain.setLayoutManager(new LinearLayoutManager(this));
 
 
@@ -35,8 +36,14 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(MainActivity.this, "button click",Toast.LENGTH_LONG).show();
+                //Toast.makeText(MainActivity.this, "button click",Toast.LENGTH_LONG).show();
                 openPostForm();
+            }
+        });
+        user.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                goUserPage();
             }
         });
 
@@ -44,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<List<Post>> call, Response<List<Post>> response) {
                 if(!response.isSuccessful()){
+                    Toast.makeText(MainActivity.this, "Response: "+response.message(),Toast.LENGTH_LONG).show();
                     return;
                 }
 
@@ -53,11 +61,17 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<List<Post>> call, Throwable t) {
+                Toast.makeText(MainActivity.this, "Error: "+t.getLocalizedMessage(),Toast.LENGTH_LONG).show();
             }
         });
     }
     public void openPostForm(){
         Intent intent = new Intent(this, AddPostActivity.class);
+        startActivity(intent);
+    }
+
+    public void goUserPage(){
+        Intent intent = new Intent(this, UserActivity.class);
         startActivity(intent);
     }
 }
